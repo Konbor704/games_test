@@ -1,8 +1,4 @@
-use bevy::{
-    prelude::*,
-    sprite::collide_aabb::{collide, Collision},
-    sprite::MaterialMesh2dBundle,
-};
+use bevy::prelude::*;
 
 pub struct EnemyPlugin;
 
@@ -24,7 +20,7 @@ struct Collider;
 
 #[derive(Component, Default, Reflect)]
 #[reflect(Component)]
-pub struct Enemy; 
+pub struct Enemy;
 
 #[derive(Component)]
 pub struct EnemyParent;
@@ -52,7 +48,7 @@ impl WallLocation {
         }
     }
 
-    fn size(&self) {
+    fn size(&self) -> Vec2 {
         let arena_height = TOP_WALL - BOTTOM_WALL;
         let arena_width = RIGHT_WALL - LEFT_WALL;
 
@@ -92,7 +88,7 @@ impl WallBundle {
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup) // spawn_enemy_parent
+        app.add_systems(Update, setup) // spawn_enemy_parent
             // .add_systems(Update, spawn_enemy)
             .register_type::<Enemy>();
     }
@@ -100,7 +96,6 @@ impl Plugin for EnemyPlugin {
 
 fn setup(
     mut commands: Commands,
-    mut materials: ResMut<Asset<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
     commands.spawn(WallBundle::new(WallLocation::Left));
@@ -108,7 +103,7 @@ fn setup(
     commands.spawn(WallBundle::new(WallLocation::Top));
     commands.spawn(WallBundle::new(WallLocation::Bottom));
 
-    let total_width_of_enemys = (RIGHT_WALL - LEFT_WALL) - 2 * GAP_BETWEN_ENEMYS_AND_WALL;
+    let total_width_of_enemys = (RIGHT_WALL - LEFT_WALL) - 2.0 * GAP_BETWEN_ENEMYS_AND_WALL;
     let bottom_edge_of_enemys = PLAYER_BOTTOM + GAP_BETWEN_ENEMYS_AND_PLAYER;
     let total_height_of_enemys = TOP_WALL - bottom_edge_of_enemys - GAP_BETWEN_ENEMYS_AND_CELING;
 
@@ -136,9 +131,9 @@ fn setup(
                 offset_y + row as f32 * (ENEMY_SIZE.y + GAP_BETWEN_ENEMYS),
             );
 
-        commands.spawn((
+            commands.spawn((
                 SpriteBundle {
-                    texture,
+                    texture: texture.clone(),
                     transform: Transform {
                         translation: enemy_position.extend(0.0),
                         scale: Vec3::new(ENEMY_SIZE.x, ENEMY_SIZE.y, 1.0),
@@ -148,17 +143,18 @@ fn setup(
                 },
                 Enemy,
                 Collider,
-            ));}
+            ));
+        }
     }
 }
 
-fn spawn_enemy_parent(mut commands: Commands) {
-    commands.spawn((
-        SpatialBundle::default(),
-        EnemyParent,
-        Name::new("Enemy Parent"),
-    ));
-}
+// fn spawn_enemy_parent(mut commands: Commands) {
+//     commands.spawn((
+//         SpatialBundle::default(),
+//         EnemyParent,
+//         Name::new("Enemy Parent"),
+//     ));
+// }
 
 // fn spawn_enemy(
 //     mut commands: Commands,
