@@ -88,13 +88,13 @@ impl WallBundle {
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, setup) // spawn_enemy_parent
+        app.add_systems(Startup, setup_enemy) // spawn_enemy_parent
             // .add_systems(Update, spawn_enemy)
             .register_type::<Enemy>();
     }
 }
 
-fn setup(
+fn setup_enemy(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
