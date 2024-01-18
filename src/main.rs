@@ -23,6 +23,14 @@ fn main() {
         .run();
 }
 
+
+pub struct EnemyPlugin;
+
+#[derive(Component)]
+struct Player {
+    speed: f32,
+}
+
 #[derive(Component)]
 struct Collider;
 
@@ -94,19 +102,7 @@ impl WallBundle {
     }
 }
 
-pub struct EnemyPlugin;
-
-#[derive(Component)]
-struct Player {
-    speed: f32,
-}
-
-
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(WallBundle::new(WallLocation::Left));
-    commands.spawn(WallBundle::new(WallLocation::Right));
-    commands.spawn(WallBundle::new(WallLocation::Top));
-    commands.spawn(WallBundle::new(WallLocation::Bottom));
 
     let player_y = BOTTOM_WALL + GAP_BETWEN_PLAYER_AND_FLOOR;
     let total_width_of_enemys = (RIGHT_WALL - LEFT_WALL) - 2.0 * GAP_BETWEN_ENEMYS_AND_WALL;
@@ -135,6 +131,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let main_player = Player {
         speed: 66.0,
     };
+
+
+    commands.spawn(WallBundle::new(WallLocation::Left));
+    commands.spawn(WallBundle::new(WallLocation::Right));
+    commands.spawn(WallBundle::new(WallLocation::Top));
+    commands.spawn(WallBundle::new(WallLocation::Bottom));
 
     camera.projection.scaling_mode = ScalingMode::AutoMin {
         min_width: (256.0),
