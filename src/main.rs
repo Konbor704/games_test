@@ -1,18 +1,18 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 
-const GAP_BETWEN_ENEMYS_AND_CELING: f32 = 8.0;
-const GAP_BETWEN_ENEMYS_AND_WALL: f32 = 20.0;
-const GAP_BETWEN_ENEMYS: f32 = 40.0;
+const GAP_BETWEN_ENEMYS_AND_CELING: f32 = 10.0;
+const GAP_BETWEN_ENEMYS_AND_WALL: f32 = 10.0;
+const GAP_BETWEN_ENEMYS: f32 = 20.0;
 const BOTTOM_WALL: f32 = -92.0;
 const TOP_WALL: f32 = 92.0;
 const LEFT_WALL: f32 = -128.0;
 const RIGHT_WALL: f32 = 128.0;
-const WALL_THICKNES: f32 = 1.0;
+const WALL_THICKNES: f32 = 5.0;
 const GAP_BETWEN_ENEMYS_AND_PLAYER: f32 = 80.0;
-const ENEMY_SIZE: Vec2 = Vec2::new(2.0, 2.0);
+const ENEMY_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 // const PLAYER_BOTTOM: f32 = 4.0;
-const GAP_BETWEN_PLAYER_AND_FLOOR: f32 = 5.0;
+const GAP_BETWEN_PLAYER_AND_FLOOR: f32 = 10.0;
 
 fn main() {
     App::new()
@@ -22,7 +22,6 @@ fn main() {
         .add_systems(Update, bevy::window::close_on_esc)
         .run();
 }
-
 
 pub struct EnemyPlugin;
 
@@ -103,20 +102,19 @@ impl WallBundle {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-
     let player_y = BOTTOM_WALL + GAP_BETWEN_PLAYER_AND_FLOOR;
     let total_width_of_enemys = (RIGHT_WALL - LEFT_WALL) - 2.0 * GAP_BETWEN_ENEMYS_AND_WALL;
     let bottom_edge_of_enemys = player_y + GAP_BETWEN_ENEMYS_AND_PLAYER;
     let total_height_of_enemys = TOP_WALL - bottom_edge_of_enemys - GAP_BETWEN_ENEMYS_AND_CELING;
 
     assert!(total_width_of_enemys > 0.0);
-    assert!(total_height_of_enemys > 0.0); 
+    assert!(total_height_of_enemys > 0.0);
 
     let n_columns = (total_width_of_enemys / (ENEMY_SIZE.x + GAP_BETWEN_ENEMYS)).floor() as usize;
     let n_rows = (total_height_of_enemys / (ENEMY_SIZE.y + GAP_BETWEN_ENEMYS)).floor() as usize;
     let vertical_gap = n_columns - 1;
 
-    let center_of_enemys = (LEFT_WALL - RIGHT_WALL) / 2.0;
+    let center_of_enemys = (LEFT_WALL + RIGHT_WALL) / 2.0;
     let left_edge_of_enemys = center_of_enemys
         - (n_columns as f32 / 2.0 * ENEMY_SIZE.x)
         - vertical_gap as f32 / 2.0 * GAP_BETWEN_ENEMYS;
@@ -128,10 +126,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let mut camera = Camera2dBundle::default();
 
-    let main_player = Player {
-        speed: 66.0,
-    };
-
+    let main_player = Player { speed: 66.0 };
 
     commands.spawn(WallBundle::new(WallLocation::Left));
     commands.spawn(WallBundle::new(WallLocation::Right));
@@ -144,7 +139,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     };
 
     commands.spawn(camera);
-
 
     commands.spawn((
         SpriteBundle {
@@ -170,7 +164,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     texture: texture.clone(),
                     transform: Transform {
                         translation: enemy_position.extend(0.0),
-                        scale: Vec3::new(ENEMY_SIZE.x, ENEMY_SIZE.y, 1.0),
+                        scale: Vec3::new(ENEMY_SIZE.x, ENEMY_SIZE.y, 0.5),
                         ..default()
                     },
                     ..default()
