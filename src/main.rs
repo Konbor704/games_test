@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::{prelude::*, render::camera::ScalingMode, sprite::MaterialMesh2dBundle};
 
 const GAP_BETWEN_ENEMYS_AND_CELING: f32 = 10.0;
 const GAP_BETWEN_ENEMYS_AND_WALL: f32 = 10.0;
@@ -14,6 +14,7 @@ const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 const PLAYER_SPEED: f32 = 100.0;
 const PLAYER_BOTTOM: f32 = 4.0;
 const GAP_BETWEN_PLAYER_AND_FLOOR: f32 = 10.0;
+const BULLET_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 
 fn main() {
     App::new()
@@ -110,7 +111,12 @@ impl WallBundle {
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
+) {
     let player_y = BOTTOM_WALL + GAP_BETWEN_PLAYER_AND_FLOOR;
     let total_width_of_enemys = (RIGHT_WALL - LEFT_WALL) - 2.0 * GAP_BETWEN_ENEMYS_AND_WALL;
     let bottom_edge_of_enemys = player_y + GAP_BETWEN_ENEMYS_AND_PLAYER;
@@ -182,6 +188,15 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ));
         }
     }
+
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes.add(shape::Circle::default().into()).into(),
+            material: materials.add(ColorMaterial::from(BULLET_COLOR)),
+            ..default()
+        },
+        Bullet,
+    ));
 }
 
 fn move_player(
