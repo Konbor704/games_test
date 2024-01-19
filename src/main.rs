@@ -3,22 +3,24 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 const GAP_BETWEN_ENEMYS_AND_CELING: f32 = 10.0;
 const GAP_BETWEN_ENEMYS_AND_WALL: f32 = 10.0;
 const GAP_BETWEN_ENEMYS: f32 = 20.0;
-const BOTTOM_WALL: f32 = -92.0;
-const TOP_WALL: f32 = 92.0;
+const BOTTOM_WALL: f32 = -95.0;
+const TOP_WALL: f32 = 95.0;
 const LEFT_WALL: f32 = -128.0;
 const RIGHT_WALL: f32 = 128.0;
 const WALL_THICKNES: f32 = 5.0;
 const GAP_BETWEN_ENEMYS_AND_PLAYER: f32 = 80.0;
 const ENEMY_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
-// const PLAYER_BOTTOM: f32 = 4.0;
+const PLAYER_SPEED: f32 = 100.0;
+const PLAYER_BOTTOM: f32 = 4.0;
 const GAP_BETWEN_PLAYER_AND_FLOOR: f32 = 10.0;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_event::<CollisionEvent>()
         .add_systems(Startup, setup)
-        .add_systems(Update, character_movement)
+        .add_systems(FixedUpdate, (apply_velocity, move_player).chain())
         .add_systems(Update, bevy::window::close_on_esc)
         .run();
 }
@@ -26,9 +28,16 @@ fn main() {
 pub struct EnemyPlugin;
 
 #[derive(Component)]
-struct Player {
-    speed: f32,
-}
+struct Player;
+
+#[derive(Component)]
+struct Bullet;
+
+#[derive(Component, Deref, DerefMut)]
+struct Velocity(Vec2);
+
+#[derive(Event, Default)]
+struct CollisionEvent;
 
 #[derive(Component)]
 struct Collider;
@@ -126,8 +135,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let mut camera = Camera2dBundle::default();
 
-    let main_player = Player { speed: 66.0 };
-
     commands.spawn(WallBundle::new(WallLocation::Left));
     commands.spawn(WallBundle::new(WallLocation::Right));
     commands.spawn(WallBundle::new(WallLocation::Top));
@@ -146,8 +153,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             transform: Transform::from_xyz(0.0, player_y, 0.0),
             ..default()
         },
-        main_player,
+        Player,
         Name::new("Player"),
+        Collider,
     ));
 
     let texture = asset_server.load("enemy_ship.png");
@@ -176,29 +184,44 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 }
 
-fn character_movement(
-    mut characters: Query<(&mut Transform, &Player)>,
-    input: Res<Input<KeyCode>>,
+fn move_player(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut query: Query<&mut Transform, With<Player>>,
     time: Res<Time>,
 ) {
-    for (mut transform, player) in &mut characters {
-        let mut movement_vector = Vec3::ZERO;
+    let mut paddle_transform = query.single_mut();
+    let mut direction = 0.0;
 
-        if input.pressed(KeyCode::D) {
-            movement_vector.x += 1.0;
-        }
-        if input.pressed(KeyCode::A) {
-            movement_vector.x -= 1.0;
-        }
-
-        if movement_vector != Vec3::ZERO {
-            movement_vector = movement_vector.normalize();
-        }
-
-        // Scale the movement vector by the speed and delta time
-        let movement_amount = player.speed * time.delta_seconds() * movement_vector;
-
-        // Apply the movement to the transform
-        transform.translation += movement_amount;
+    if keyboard_input.pressed(KeyCode::A) {
+        direction -= 1.0;
     }
+
+    if keyboard_input.pressed(KeyCode::D) {
+        direction += 1.0;
+    }
+
+    // Calculate the new horizontal paddle position based on player input
+    let new_paddle_position =
+        paddle_transform.translation.x + direction * PLAYER_SPEED * time.delta_seconds();
+
+    // Update the paddle position,
+    // making sure it doesn't cause the paddle to leave the arena
+    let left_bound = LEFT_WALL + WALL_THICKNES / 2.0 + 16.0 / 2.0 + 10.0;
+    let right_bound = RIGHT_WALL - WALL_THICKNES / 2.0 - 16.0 / 2.0 - PLAYER_BOTTOM;
+
+    paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
+}
+fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>) {
+    for (mut transform, velocity) in &mut query {
+        transform.translation.x += velocity.x * time.delta_seconds();
+        transform.translation.y += velocity.y * time.delta_seconds();
+    }
+}
+
+fn shooting(
+    commands: Commands,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut query: Query<(&mut Transform, &Velocity)>,
+    time: Res<Time>,
+) {
 }
